@@ -2,6 +2,8 @@ __precompile__(true)
 
 module Records
 
+using StaticArrays
+
 export
     ID,
 
@@ -23,7 +25,6 @@ export
     get_ids,
     nth_id,
     get_time,
-    get_frame,
     get_state,
     get_def,
     get_elapsed_time,
@@ -32,7 +33,8 @@ export
     findfirst_frame_with_id,
     findlast_frame_with_id,
     push_back_records!,
-    update!
+    update!,
+    get_first_available_id
 
 
 include("common.jl")
