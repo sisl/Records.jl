@@ -1,15 +1,15 @@
-type Frame{S,N}
-    entities::MVector{N,S}
+type Frame{S}
+    entities::Vector{S} # NOTE: I tried StaticArrays; was not faster
     n::Int
 end
 function Frame{S}(arr::AbstractVector{S}, N::Int=length(arr))
     N ≥ length(arr) || error("capacity cannot be less than entitiy count! (N ≥ length(arr))")
-    entities = convert(MVector{N,S}, arr)
-    return Frame{S,N}(entities, N)
+    entities = convert(Vector{S}, arr)
+    return Frame{S}(entities, N)
 end
 function Frame{S}(::Type{S}, N::Int=100)
-    entities = MVector{N,S}()
-    return Frame{S,N}(entities, 0)
+    entities = Array(S, N)
+    return Frame{S}(entities, 0)
 end
 
 Base.show{S}(io::IO, frame::Frame{S}) = @printf(io, "Frame{%s}(%d entities)", string(S), length(frame))

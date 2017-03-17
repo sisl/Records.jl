@@ -2,8 +2,6 @@ __precompile__(true)
 
 module Records
 
-using StaticArrays
-
 export
     ID,
 
