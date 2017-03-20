@@ -1,20 +1,28 @@
-type QueueRecord{S}
-    frames::Vector{Frame{S}}
+type QueueRecord{E}
+    frames::Vector{Frame{E}}
     timestep::Float64
     nframes::Int # number of active Frames
 end
-function QueueRecord{S}(::Type{S}, capacity::Int, timestep::Float64, frame_capacity::Int=100)
-    frames = Array(Frame{S}, capacity)
+function QueueRecord{E}(::Type{E}, capacity::Int, timestep::Float64, frame_capacity::Int=100)
+    frames = Array(Frame{E}, capacity)
     for i in 1 : length(frames)
-        frames[i] = Frame(S, frame_capacity)
+        frames[i] = Frame(E, frame_capacity)
     end
-    QueueRecord{S}(frames, timestep, 0)
+    QueueRecord{E}(frames, timestep, 0)
 end
 
 Base.show(io::IO, rec::QueueRecord) = print(io, "QueueRecord(nframes=", rec.nframes, ")")
 
 capacity(rec::QueueRecord) = length(rec.frames)
 Base.length(rec::QueueRecord) = rec.nframes
+function nstates(rec::QueueRecord)
+    retval = 0
+    for frame in rec.frames
+        retval += length(frame)
+    end
+    return retval
+end
+
 function Base.deepcopy(rec::QueueRecord)
     retval = QueueRecord(capacity(rec), rec.timestep, capacity(rec.frames[1]))
     for i in 1 : rec.nframes
@@ -25,6 +33,9 @@ end
 
 pastframe_inbounds(rec::QueueRecord, pastframe::Int) = 1 ≤ 1-pastframe ≤ rec.nframes
 Base.getindex(rec::QueueRecord, pastframe::Int) = rec.frames[1 - pastframe]
+
+get_time(rec::QueueRecord, pastframe::Int) = -get_elapsed_time(rec, pastframe)
+get_timestep(rec::QueueRecord) = rec.timestep
 get_elapsed_time(rec::QueueRecord, pastframe::Int) = (1-pastframe)*rec.timestep
 function get_elapsed_time(
     rec::QueueRecord,
@@ -46,18 +57,17 @@ function push_back_records!(rec::QueueRecord)
     end
     return rec
 end
-function Base.insert!{S}(rec::QueueRecord{S}, frame::Frame{S}, pastframe::Int=0)
+function Base.insert!{E}(rec::QueueRecord{E}, frame::Frame{E}, pastframe::Int=0)
     copy!(rec[pastframe], frame)
     return rec
 end
-function Base.get!{S}(frame::Frame{S}, rec::QueueRecord{S}, pastframe::Int=0)
+function Base.get!{E}(frame::Frame{E}, rec::QueueRecord{E}, pastframe::Int=0)
     copy!(frame, rec[pastframe])
     frame
 end
-function update!{S}(rec::QueueRecord{S}, frame::Frame{S})
+function update!{E}(rec::QueueRecord{E}, frame::Frame{E})
     push_back_records!(rec)
     insert!(rec, frame, 0)
     rec.nframes = min(rec.nframes+1, capacity(rec))
     return rec
 end
-

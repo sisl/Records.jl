@@ -1,42 +1,26 @@
-type Frame{S}
-    entities::Vector{S} # NOTE: I tried StaticArrays; was not faster
+type Frame{E}
+    entities::Vector{E} # NOTE: I tried StaticArrays; was not faster
     n::Int
 end
-function Frame{S}(arr::AbstractVector{S}, N::Int=length(arr))
+function Frame{E}(arr::AbstractVector{E}, N::Int=length(arr))
     N ≥ length(arr) || error("capacity cannot be less than entitiy count! (N ≥ length(arr))")
-    entities = convert(Vector{S}, arr)
-    return Frame{S}(entities, N)
+    entities = convert(Vector{E}, arr)
+    return Frame{E}(entities, N)
 end
-function Frame{S}(::Type{S}, N::Int=100)
-    entities = Array(S, N)
-    return Frame{S}(entities, 0)
+function Frame{E}(::Type{E}, N::Int=100)
+    entities = Array(E, N)
+    return Frame{E}(entities, 0)
 end
 
-Base.show{S}(io::IO, frame::Frame{S}) = @printf(io, "Frame{%s}(%d entities)", string(S), length(frame))
+Base.show{E}(io::IO, frame::Frame{E}) = @printf(io, "Frame{%s}(%d entities)", string(E), length(frame))
 
 capacity(frame::Frame) = length(frame.entities)
 Base.length(frame::Frame) = frame.n
 Base.getindex(frame::Frame, i::Int) = frame.entities[i]
-function Base.findfirst(frame::Frame, id::ID)
-    for entity_index in 1 : frame.n
-        entity = frame.entities[entity_index]
-        if get_id(entity) == id
-            return entity_index
-        end
-    end
-    return 0
-end
-function Base.getindex(frame::Frame, id::ID)
-    entity_index = findfirst(frame, id)
-    if entity_index == 0
-        throw(BoundsError(frame, id))
-    end
-    return frame[entity_index]
-end
+
 Base.endof(frame::Frame) = frame.n
-Base.in(frame::Frame, id::ID) = findfirst(frame, id) != 0
-function Base.setindex!{S}(frame::Frame{S}, entry::S, i::Int)
-    frame.entities[i] = entry
+function Base.setindex!{E}(frame::Frame{E}, entity::E, i::Int)
+    frame.entities[i] = entity
     return frame
 end
 function Base.empty!(frame::Frame)
@@ -52,41 +36,62 @@ function Base.deleteat!(frame::Frame, entity_index::Int)
     frame.n -= 1
     frame
 end
-Base.delete!{S}(frame::Frame{S}, entry::S) = deleteat!(frame, get_index_of_first_vehicle_with_id(frame, veh.def.id))
-function Base.delete!(frame::Frame, id::ID)
-    entity_index = findfirst(frame, id)
-    if entity_index != 0
-        deleteat!(frame, entity_index)
-    end
-    return frame
-end
 
 Base.start(frame::Frame) = 1
 Base.done(frame::Frame, i::Int) = i > length(frame)
 Base.next(frame::Frame, i::Int) = (frame.entities[i], i+1)
 
-function Base.copy!{S}(dest::Frame{S}, src::Frame{S})
+function Base.copy!{E}(dest::Frame{E}, src::Frame{E})
     for i in 1 : src.n
         dest.entities[i] = src.entities[i]
     end
     dest.n = src.n
     return dest
 end
-Base.copy{S}(frame::Frame{S}) = copy!(Frame(S, capacity(frame)), frame)
+Base.copy{E}(frame::Frame{E}) = copy!(Frame(E, capacity(frame)), frame)
 
-function Base.push!{S}(frame::Frame{S}, entity::S)
+function Base.push!{E}(frame::Frame{E}, entity::E)
     frame.n += 1
     frame.entities[frame.n] = entity
     return frame
 end
 
-function get_first_available_id(frame::Frame)
-    ids = Set{ID}([get_id(entity) for entity in frame])
-    id = ID(1)
+####
+
+Base.in{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I) = findfirst(frame, id) != 0
+function Base.findfirst{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
+    for entity_index in 1 : frame.n
+        entity = frame.entities[entity_index]
+        if get_id(entity) == id
+            return entity_index
+        end
+    end
+    return 0
+end
+function Base.getindex{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
+    entity_index = findfirst(frame, id)
+    if entity_index == 0
+        throw(BoundsError(frame, id))
+    end
+    return frame[entity_index]
+end
+function get_first_available_id{S,D,I}(frame::Frame{Entity{S,D,I}})
+    ids = Set{I}(entity.id for entity in frame)
+    id_one = one(I)
+    id = id_one
     while id ∈ ids
-        id = ID(id.id + 1)
+        id += id_one
     end
     return id
+end
+
+Base.delete!{S,D,I}(frame::Frame{Entity{S,D,I}}, entity::Entity{S,D,I}) = deleteat!(frame, findfirst(frame, entity.id))
+function Base.delete!{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
+    entity_index = findfirst(frame, id)
+    if entity_index != 0
+        deleteat!(frame, entity_index)
+    end
+    return frame
 end
 
 
