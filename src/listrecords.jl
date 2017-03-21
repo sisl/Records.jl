@@ -22,7 +22,8 @@ type ListRecord{S,D,I} # State, Definition, Identification
     states::Vector{RecordState{S}}
     defs::Dict{I, D}
 end
-ListRecord{S,D,I}(timestep::Float64, ::Type{S}, ::Type{D}, ::Type{I}=Int) = ListRecord(timestep, RecordFrame[], RecordState{S}[], Dict{I,D}())
+ListRecord{S,D,I}(timestep::Float64, ::Type{S}, ::Type{D}, ::Type{I}=Int) = ListRecord{S,D,I}(timestep, RecordFrame[], RecordState{S}[], Dict{I,D}())
+
 
 Base.show{S,D,I}(io::IO, rec::ListRecord{S,D,I}) = @printf(io, "ListRecord{%s, %s, %s}(%d frames)", string(S), string(D), string(I), nframes(rec))
 function Base.write(io::IO, ::MIME"text/plain", rec::ListRecord)
@@ -118,7 +119,7 @@ function findfirst_stateindex_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::I, fram
 end
 function findfirst_frame_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::I)
     for frame in 1:length(rec.frames)
-        if findfirst_stateindex_with_id(rec, id, frame) != -1
+        if findfirst_stateindex_with_id(rec, id, frame) != 0
             return frame
         end
     end
@@ -126,17 +127,17 @@ function findfirst_frame_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::I)
 end
 function findlast_frame_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::Int)
     for frame in reverse(1:length(rec.frames))
-        if findfirst_stateindex_with_id(rec, id, frame) != -1
+        if findfirst_stateindex_with_id(rec, id, frame) != 0
             return frame
         end
     end
     return 0
 end
 
-Base.in{S,D,I}(id::I, rec::ListRecord{S,D,I}, frame_index::Int) = findfirst_stateindex_with_id(rec, id, frame_index) != -1
+Base.in{S,D,I}(id::I, rec::ListRecord{S,D,I}, frame_index::Int) = findfirst_stateindex_with_id(rec, id, frame_index) != 0
 get_state{S,D,I}(rec::ListRecord{S,D,I}, id::I, frame_index::Int) = rec.states[findfirst_stateindex_with_id(rec, id, frame_index)].state
 get_def{S,D,I}(rec::ListRecord{S,D,I}, id::I) = rec.defs[id]
-Base.get{S,D,I}(rec::ListRecord{S,D,I}, id::I, frame_index::Int) = (get_state(rec, id, frame_index), get_def(rec,id))
+Base.get{S,D,I}(rec::ListRecord{S,D,I}, id::I, frame_index::Int) = Entity(get_state(rec, id, frame_index), get_def(rec,id), id)
 function Base.get(rec::ListRecord, stateindex::Int)
     recstate = rec.states[stateindex]
     return (recstate.state, get_def(rec, recstate.id))
@@ -158,9 +159,7 @@ function Base.get!{T,S,D,I}(frame::Frame{T}, rec::ListRecord{S,D,I}, frame_index
 
     return frame
 end
-function Base.push!{S,D,T,I}(rec::ListRecord{S,D,I}, frame::Frame{T}, time::Float64)
-    error("NOT YET IMPLEMENTED")
-end
+
 
 #################################
 

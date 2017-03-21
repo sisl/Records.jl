@@ -38,7 +38,7 @@ function Base.convert{S,D,I}(::Type{QueueRecord{Entity{S,D,I}}}, lrec::ListRecor
 
     N = nframes(lrec)
     M = maximum(n_objects_in_frame(lrec, i) for i in 1 : N)
-    retval = QueueRecord(Entity{S,D,I}, N, get_mean_timestep(lrec), M)
+    retval = QueueRecord(Entity{S,D,I}, N, get_timestep(lrec), M)
 
     frame = Frame(Entity{S,D,I}, M)
     for i in 1 : N
