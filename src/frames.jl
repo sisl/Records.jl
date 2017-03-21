@@ -56,19 +56,20 @@ function Base.push!{E}(frame::Frame{E}, entity::E)
     return frame
 end
 
+
 ####
 
 Base.in{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I) = findfirst(frame, id) != 0
 function Base.findfirst{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
     for entity_index in 1 : frame.n
         entity = frame.entities[entity_index]
-        if get_id(entity) == id
+        if entity.id == id
             return entity_index
         end
     end
     return 0
 end
-function Base.getindex{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
+function get_by_id{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
     entity_index = findfirst(frame, id)
     if entity_index == 0
         throw(BoundsError(frame, id))
@@ -83,6 +84,11 @@ function get_first_available_id{S,D,I}(frame::Frame{Entity{S,D,I}})
         id += id_one
     end
     return id
+end
+function Base.push!{S,D,I}(frame::Frame{Entity{S,D,I}}, s::S)
+    id = get_first_available_id(frame)
+    entity = Entity{S,D,I}(s, D(), id)
+    push!(frame, entity)
 end
 
 Base.delete!{S,D,I}(frame::Frame{Entity{S,D,I}}, entity::Entity{S,D,I}) = deleteat!(frame, findfirst(frame, entity.id))

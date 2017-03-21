@@ -24,7 +24,6 @@ type ListRecord{S,D,I} # State, Definition, Identification
 end
 ListRecord{S,D,I}(timestep::Float64, ::Type{S}, ::Type{D}, ::Type{I}=Int) = ListRecord{S,D,I}(timestep, RecordFrame[], RecordState{S}[], Dict{I,D}())
 
-
 Base.show{S,D,I}(io::IO, rec::ListRecord{S,D,I}) = @printf(io, "ListRecord{%s, %s, %s}(%d frames)", string(S), string(D), string(I), nframes(rec))
 function Base.write(io::IO, ::MIME"text/plain", rec::ListRecord)
     textmime = MIME"text/plain"()
@@ -89,7 +88,6 @@ function Base.read{S,D,I}(io::IO, ::MIME"text/plain", ::Type{ListRecord{S,D,I}})
     return ListRecord{S,D,I}(timestep, frames, states, defs)
 end
 
-
 get_statetype{S,D,I}(rec::ListRecord{S,D,I}) = S
 get_deftype{S,D,I}(rec::ListRecord{S,D,I}) = D
 get_idtype{S,D,I}(rec::ListRecord{S,D,I}) = I
@@ -140,20 +138,47 @@ get_def{S,D,I}(rec::ListRecord{S,D,I}, id::I) = rec.defs[id]
 Base.get{S,D,I}(rec::ListRecord{S,D,I}, id::I, frame_index::Int) = Entity(get_state(rec, id, frame_index), get_def(rec,id), id)
 function Base.get(rec::ListRecord, stateindex::Int)
     recstate = rec.states[stateindex]
-    return (recstate.state, get_def(rec, recstate.id))
+    return Entity(recstate.state, get_def(rec, recstate.id), recstate.id)
 end
+
+function get_subinterval{S,D,I}(rec::ListRecord{S,D,I}, frame_index_lo::Int, frame_index_hi::Int)
+    frame_index_hi ≥ frame_index_lo || throw(DomainError())
+
+    frame_indexes = frame_index_lo : frame_index_hi
+    frames = Array(RecordFrame, length(frame_indexes))
+    states = Array(RecordState{S,I}, rec.frames[frame_index_hi].hi - rec.frames[frame_index_lo].lo + 1)
+    defs = Dict{I, D}()
+
+    hi = 1
+    for (i,frame_index) in enumerate(frame_indexes)
+        frame = rec.frames[frame_index]
+        n = length(frame)
+        lo = hi
+        hi += n-1
+        copy!(states, lo, rec.states, frame.lo, n)
+        frames[i] = RecordFrame(lo, hi)
+        hi += 1
+    end
+
+    for state in states
+        defs[state.id] = get_def(rec, state.id)
+    end
+
+    return ListRecord{S,D,I}(rec.timestep, frames, states, defs)
+end
+get_subinterval(rec::ListRecord, range::UnitRange{Int64}) = get_subinterval(rec, a.start, a.stop)
 
 #################################
 
-function Base.get!{T,S,D,I}(frame::Frame{T}, rec::ListRecord{S,D,I}, frame_index::Int)
+function Base.get!{S,D,I}(frame::Frame{Entity{S,D,I}}, rec::ListRecord{S,D,I}, frame_index::Int)
 
-    frame.nentries = 0
+    frame.n = 0
 
     if frame_inbounds(rec, frame_index)
         recframe = rec.frames[frame_index]
         for stateindex in recframe.lo : recframe.hi
-            frame.nentries += 1
-            frame.entries[frame.nentries] = convert(T, get(rec, stateindex))
+            frame.n += 1
+            frame.entities[frame.n] = get(rec, stateindex)
         end
     end
 

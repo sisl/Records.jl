@@ -29,6 +29,8 @@ export
     get_time,
     get_timestep,
     get_elapsed_time,
+    get_subinterval,
+    get_by_id,
     findfirst_stateindex_with_id,
     findfirst_frame_with_id,
     findlast_frame_with_id,
