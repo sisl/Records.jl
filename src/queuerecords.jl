@@ -36,7 +36,7 @@ Base.getindex(rec::QueueRecord, pastframe::Int) = rec.frames[1 - pastframe]
 
 get_time(rec::QueueRecord, pastframe::Int) = -get_elapsed_time(rec, pastframe)
 get_timestep(rec::QueueRecord) = rec.timestep
-get_elapsed_time(rec::QueueRecord, pastframe::Int) = (1-pastframe)*rec.timestep
+get_elapsed_time(rec::QueueRecord, pastframe::Int) = -pastframe*rec.timestep
 function get_elapsed_time(
     rec::QueueRecord,
     pastframe_farthest_back::Int,
