@@ -14,7 +14,7 @@ end
 Base.show(io::IO, rec::QueueRecord) = print(io, "QueueRecord(nframes=", rec.nframes, ")")
 
 capacity(rec::QueueRecord) = length(rec.frames)
-Base.length(rec::QueueRecord) = rec.nframes
+nframes(rec::QueueRecord) = rec.nframes
 function nstates(rec::QueueRecord)
     retval = 0
     for frame in rec.frames
@@ -52,7 +52,7 @@ function Base.empty!(rec::QueueRecord)
 end
 
 function push_back_records!(rec::QueueRecord)
-    for i in min(rec.nframes+1, length(rec.frames)) : -1 : 2
+    for i in min(rec.nframes+1, capacity(rec)) : -1 : 2
         copy!(rec.frames[i], rec.frames[i-1])
     end
     return rec

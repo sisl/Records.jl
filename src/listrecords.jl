@@ -169,13 +169,12 @@ get_subinterval(rec::ListRecord, range::UnitRange{Int64}) = get_subinterval(rec,
 
 function Base.get!{S,D,I}(frame::Frame{Entity{S,D,I}}, rec::ListRecord{S,D,I}, frame_index::Int)
 
-    frame.n = 0
+    empty!(frame)
 
     if frame_inbounds(rec, frame_index)
         recframe = rec.frames[frame_index]
         for stateindex in recframe.lo : recframe.hi
-            frame.n += 1
-            frame.entities[frame.n] = get(rec, stateindex)
+            push!(frame, get(rec, stateindex))
         end
     end
 
