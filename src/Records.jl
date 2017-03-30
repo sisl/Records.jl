@@ -34,9 +34,10 @@ export
     findfirst_stateindex_with_id,
     findfirst_frame_with_id,
     findlast_frame_with_id,
+    get_first_available_id,
     push_back_records!,
     update!,
-    get_first_available_id
+    allocate_frame
 
 
 include("common.jl")

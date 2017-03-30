@@ -71,3 +71,8 @@ function update!{E}(rec::QueueRecord{E}, frame::Frame{E})
     rec.nframes = min(rec.nframes+1, capacity(rec))
     return rec
 end
+
+function allocate_frame{E}(rec::QueueRecord{E})
+    max_n_objects = maximum(length(rec[j]) for j in 0 : 1-length(rec))
+    return Frame(E, max_n_objects)
+end

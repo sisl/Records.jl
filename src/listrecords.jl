@@ -213,3 +213,10 @@ function Base.next(iter::ListRecordIterator, frame_index::Int)
     end
     (item, frame_index)
 end
+
+#################################
+
+function allocate_frame{S,D,I}(rec::ListRecord{S,D,I})
+    max_n_objects = maximum(n_objects_in_frame(trajdata,i) for i in 1 : nframes(trajdata))
+    return Frame(Entity{S,D,I}, max_n_objects)
+end
