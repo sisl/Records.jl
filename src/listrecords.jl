@@ -25,8 +25,7 @@ end
 ListRecord{S,D,I}(timestep::Float64, ::Type{S}, ::Type{D}, ::Type{I}=Int) = ListRecord{S,D,I}(timestep, RecordFrame[], RecordState{S}[], Dict{I,D}())
 
 Base.show{S,D,I}(io::IO, rec::ListRecord{S,D,I}) = @printf(io, "ListRecord{%s, %s, %s}(%d frames)", string(S), string(D), string(I), nframes(rec))
-function Base.write(io::IO, ::MIME"text/plain", rec::ListRecord)
-    textmime = MIME"text/plain"()
+function Base.write(io::IO, mime::MIME"text/plain", rec::ListRecord)
 
     show(io, rec)
     print(io, "\n")
@@ -35,54 +34,52 @@ function Base.write(io::IO, ::MIME"text/plain", rec::ListRecord)
     # defs
     println(io, length(rec.defs))
     for (id,def) in rec.defs
-        write(io, textmime, id)
+        write(io, mime, id)
         print(io, "\n")
-        write(io, textmime, def)
+        write(io, mime, def)
         print(io, "\n")
     end
 
     # ids & states
     println(io, length(rec.states))
     for recstate in rec.states
-        write(io, textmime, recstate.id)
+        write(io, mime, recstate.id)
         print(io, "\n")
-        write(io, textmime, recstate.state)
+        write(io, mime, recstate.state)
         print(io, "\n")
     end
 
     # frames
     println(io, nframes(rec))
     for recframe in rec.frames
-        write(io, textmime, recframe)
+        write(io, mime, recframe)
         print(io, "\n")
     end
 end
-function Base.read{S,D,I}(io::IO, ::MIME"text/plain", ::Type{ListRecord{S,D,I}})
+function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,I}})
     readline(io) # skip first line
-
-    textmime = MIME"text/plain"()
 
     timestep = parse(Float64, readline(io))
 
     n = parse(Int, readline(io))
     defs = Dict{I,D}()
     for i in 1 : n
-        id = read(io, textmime, I)
-        defs[id] = read(io, textmime, D)
+        id = read(io, mime, I)
+        defs[id] = read(io, mime, D)
     end
 
     n = parse(Int, readline(io))
     states = Array(RecordState{S,I}, n)
     for i in 1 : n
-        id = read(io, textmime, I)
-        state = read(io, textmime, S)
+        id = read(io, mime, I)
+        state = read(io, mime, S)
         states[i] = RecordState{S,I}(state, id)
     end
 
     n = parse(Int, readline(io))
     frames = Array(RecordFrame, n)
     for i in 1 : n
-        frames[i] = read(io, textmime, RecordFrame)
+        frames[i] = read(io, mime, RecordFrame)
     end
 
     return ListRecord{S,D,I}(timestep, frames, states, defs)
@@ -172,13 +169,12 @@ get_subinterval(rec::ListRecord, range::UnitRange{Int64}) = get_subinterval(rec,
 
 function Base.get!{S,D,I}(frame::Frame{Entity{S,D,I}}, rec::ListRecord{S,D,I}, frame_index::Int)
 
-    frame.n = 0
+    empty!(frame)
 
     if frame_inbounds(rec, frame_index)
         recframe = rec.frames[frame_index]
         for stateindex in recframe.lo : recframe.hi
-            frame.n += 1
-            frame.entities[frame.n] = get(rec, stateindex)
+            push!(frame, get(rec, stateindex))
         end
     end
 
