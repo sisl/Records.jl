@@ -1,11 +1,3 @@
-immutable Entity{S,D,I} # state, definition, identification
-    state::S
-    def::D
-    id::I
-end
-
-# overwrite one(I) for get_first_available_id
-
 
 
 Base.write(io::IO, ::MIME"text/plain", ::Void) = nothing

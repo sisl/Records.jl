@@ -5,6 +5,7 @@ module Records
 export
     Entity,
     Frame,
+    EntityFrame,
     RecordFrame,
     RecordState,
     ListRecord,
@@ -41,6 +42,7 @@ export
 
 
 include("common.jl")
+include("entities.jl")
 include("frames.jl")
 include("listrecords.jl")
 include("queuerecords.jl")

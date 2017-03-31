@@ -59,8 +59,10 @@ end
 
 ####
 
-Base.in{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I) = findfirst(frame, id) != 0
-function Base.findfirst{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
+typealias EntityFrame{S,D,I} Frame{Entity{S,D,I}}
+
+Base.in{S,D,I}(frame::EntityFrame{S,D,I}, id::I) = findfirst(frame, id) != 0
+function Base.findfirst{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
     for entity_index in 1 : frame.n
         entity = frame.entities[entity_index]
         if entity.id == id
@@ -69,14 +71,14 @@ function Base.findfirst{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
     end
     return 0
 end
-function get_by_id{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
+function get_by_id{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
     entity_index = findfirst(frame, id)
     if entity_index == 0
         throw(BoundsError(frame, id))
     end
     return frame[entity_index]
 end
-function get_first_available_id{S,D,I}(frame::Frame{Entity{S,D,I}})
+function get_first_available_id{S,D,I}(frame::EntityFrame{S,D,I})
     ids = Set{I}(entity.id for entity in frame)
     id_one = one(I)
     id = id_one
@@ -85,14 +87,14 @@ function get_first_available_id{S,D,I}(frame::Frame{Entity{S,D,I}})
     end
     return id
 end
-function Base.push!{S,D,I}(frame::Frame{Entity{S,D,I}}, s::S)
+function Base.push!{S,D,I}(frame::EntityFrame{S,D,I}, s::S)
     id = get_first_available_id(frame)
     entity = Entity{S,D,I}(s, D(), id)
     push!(frame, entity)
 end
 
-Base.delete!{S,D,I}(frame::Frame{Entity{S,D,I}}, entity::Entity{S,D,I}) = deleteat!(frame, findfirst(frame, entity.id))
-function Base.delete!{S,D,I}(frame::Frame{Entity{S,D,I}}, id::I)
+Base.delete!{S,D,I}(frame::EntityFrame{S,D,I}, entity::Entity{S,D,I}) = deleteat!(frame, findfirst(frame, entity.id))
+function Base.delete!{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
     entity_index = findfirst(frame, id)
     if entity_index != 0
         deleteat!(frame, entity_index)
