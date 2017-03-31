@@ -76,3 +76,5 @@ function allocate_frame{E}(rec::QueueRecord{E})
     max_n_objects = maximum(length(rec[j]) for j in 0 : 1-length(rec))
     return Frame(E, max_n_objects)
 end
+
+typealias EntityQueueRecord{S,D,I} QueueRecord{Entity{S,D,I}}

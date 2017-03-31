@@ -10,6 +10,7 @@ export
     RecordState,
     ListRecord,
     QueueRecord,
+    EntityQueueRecord,
     ListRecordIterator,
 
     get_statetype,
