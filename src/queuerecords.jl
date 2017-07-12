@@ -1,4 +1,4 @@
-type QueueRecord{E}
+mutable struct QueueRecord{E}
     frames::Vector{Frame{E}}
     timestep::Float64
     nframes::Int # number of active Frames
@@ -77,4 +77,4 @@ function allocate_frame{E}(rec::QueueRecord{E})
     return Frame(E, max_n_objects)
 end
 
-typealias EntityQueueRecord{S,D,I} QueueRecord{Entity{S,D,I}}
+const EntityQueueRecord{S,D,I} = QueueRecord{Entity{S,D,I}}

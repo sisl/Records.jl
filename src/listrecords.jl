@@ -1,4 +1,4 @@
-immutable RecordFrame
+struct RecordFrame
     lo::Int
     hi::Int
 end
@@ -11,12 +11,12 @@ function Base.read(io::IO, ::MIME"text/plain", ::Type{RecordFrame})
     return RecordFrame(lo, hi)
 end
 
-immutable RecordState{S,I}
+struct RecordState{S,I}
     state::S
     id::I
 end
 
-type ListRecord{S,D,I} # State, Definition, Identification
+mutable struct ListRecord{S,D,I} # State, Definition, Identification
     timestep::Float64
     frames::Vector{RecordFrame}
     states::Vector{RecordState{S}}
@@ -184,7 +184,7 @@ end
 
 #################################
 
-immutable ListRecordIterator{S,D,I}
+struct ListRecordIterator{S,D,I}
     rec::ListRecord{S,D,I}
     id::I
 end

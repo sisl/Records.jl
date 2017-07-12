@@ -1,4 +1,4 @@
-type Frame{E}
+mutable struct Frame{E}
     entities::Vector{E} # NOTE: I tried StaticArrays; was not faster
     n::Int
 end
@@ -59,7 +59,7 @@ end
 
 ####
 
-typealias EntityFrame{S,D,I} Frame{Entity{S,D,I}}
+const EntityFrame{S,D,I} = Frame{Entity{S,D,I}}
 
 Base.in{S,D,I}(frame::EntityFrame{S,D,I}, id::I) = findfirst(frame, id) != 0
 function Base.findfirst{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
