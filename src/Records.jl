@@ -39,7 +39,8 @@ export
     get_first_available_id,
     push_back_records!,
     update!,
-    allocate_frame
+    allocate_frame,
+    get_sparse_lookup
 
 
 include("common.jl")
