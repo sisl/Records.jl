@@ -4,7 +4,7 @@ mutable struct QueueRecord{E}
     nframes::Int # number of active Frames
 end
 function QueueRecord{E}(::Type{E}, capacity::Int, timestep::Float64, frame_capacity::Int=100)
-    frames = Array(Frame{E}, capacity)
+    frames = Array{Frame{E}}(capacity)
     for i in 1 : length(frames)
         frames[i] = Frame(E, frame_capacity)
     end

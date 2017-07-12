@@ -69,7 +69,7 @@ function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,
     end
 
     n = parse(Int, readline(io))
-    states = Array(RecordState{S,I}, n)
+    states = Array{RecordState{S,I}}(n)
     for i in 1 : n
         id = read(io, mime, I)
         state = read(io, mime, S)
@@ -77,7 +77,7 @@ function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,
     end
 
     n = parse(Int, readline(io))
-    frames = Array(RecordFrame, n)
+    frames = Array{RecordFrame}(n)
     for i in 1 : n
         frames[i] = read(io, mime, RecordFrame)
     end
@@ -142,8 +142,8 @@ function get_subinterval{S,D,I}(rec::ListRecord{S,D,I}, frame_index_lo::Int, fra
     frame_index_hi ≥ frame_index_lo || throw(DomainError())
 
     frame_indexes = frame_index_lo : frame_index_hi
-    frames = Array(RecordFrame, length(frame_indexes))
-    states = Array(RecordState{S,I}, rec.frames[frame_index_hi].hi - rec.frames[frame_index_lo].lo + 1)
+    frames = Array{RecordFrame}(length(frame_indexes))
+    states = Array{RecordState{S,I}}(rec.frames[frame_index_hi].hi - rec.frames[frame_index_lo].lo + 1)
     defs = Dict{I, D}()
 
     hi = 1

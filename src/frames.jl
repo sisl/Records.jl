@@ -8,7 +8,7 @@ function Frame{E}(arr::AbstractVector{E}, N::Int=length(arr))
     return Frame{E}(entities, N)
 end
 function Frame{E}(::Type{E}, N::Int=100)
-    entities = Array(E, N)
+    entities = Array{E}(N)
     return Frame{E}(entities, 0)
 end
 

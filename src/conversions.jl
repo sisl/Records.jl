@@ -5,8 +5,8 @@ Converts a QueueRecord into the corresponding ListRecord.
 """
 function Base.convert{S,D,I}(::Type{ListRecord{S,D,I}}, qrec::QueueRecord{Entity{S,D,I}})
 
-    frames = Array(RecordFrame, length(qrec))
-    states = Array(RecordState{S,I}, nstates(qrec))
+    frames = Array{RecordFrame}(length(qrec))
+    states = Array{RecordState{S,I}}(nstates(qrec))
     defs = Dict{I, D}()
 
     lo = 1
