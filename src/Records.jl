@@ -11,7 +11,9 @@ export
     ListRecord,
     QueueRecord,
     EntityQueueRecord,
-    ListRecordIterator,
+
+    ListRecordFrameIterator,
+    ListRecordStateByIdIterator,
 
     get_statetype,
     get_deftype,

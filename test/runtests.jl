@@ -16,3 +16,18 @@ sparsemat, id_lookup = get_sparse_lookup(rec)
 @test sparsemat[1,3] == 0.0
 @test sparsemat[2,3] == 4.0
 @test id_lookup == Dict(2=>2,3=>3,1=>1)
+
+@test length(ListRecordStateByIdIterator(rec, 1)) == 2
+@test length(ListRecordStateByIdIterator(rec, 2)) == 1
+@test length(ListRecordStateByIdIterator(rec, 3)) == 1
+
+@test collect(ListRecordStateByIdIterator(rec, 1)) == [(1,1.0),(2,3.0)]
+@test collect(ListRecordStateByIdIterator(rec, 2)) == [(1,2.0)]
+@test collect(ListRecordStateByIdIterator(rec, 3)) == [(2,4.0)]
+
+@test length(ListRecordFrameIterator(rec)) == 2
+len = 0
+for frame in ListRecordFrameIterator(rec)
+    len += 1
+end
+@test len == 2

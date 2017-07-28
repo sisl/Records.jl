@@ -167,7 +167,12 @@ get_subinterval(rec::ListRecord, range::UnitRange{Int64}) = get_subinterval(rec,
 
 #################################
 
-function Base.get!{S,D,I}(frame::Frame{Entity{S,D,I}}, rec::ListRecord{S,D,I}, frame_index::Int)
+EntityFrame{S,D,I}(rec::ListRecord{S,D,I}, N::Int=100) = Frame(Entity{S,D,I}, N)
+function allocate_frame{S,D,I}(rec::ListRecord{S,D,I})
+    max_n_objects = maximum(n_objects_in_frame(rec,i) for i in 1 : nframes(rec))
+    return Frame(Entity{S,D,I}, max_n_objects)
+end
+function Base.get!{S,D,I}(frame::EntityFrame{S,D,I}, rec::ListRecord{S,D,I}, frame_index::Int)
 
     empty!(frame)
 
@@ -184,35 +189,55 @@ end
 
 #################################
 
-struct ListRecordIterator{S,D,I}
+"""
+An iterator for looping over all states for a particular entity id.
+Each element is a Tuple{Int,S} containing the frame index and the state.
+"""
+struct ListRecordStateByIdIterator{S,D,I}
     rec::ListRecord{S,D,I}
     id::I
 end
-Base.length(iter::ListRecordIterator) = sum(frame->in(iter.id, iter.rec, frame), 1:nframes(iter.rec))
-function Base.start(iter::ListRecordIterator)
-    frame = 1
-    while frame < nframes(iter.rec) &&
-          !in(iter.id, iter.rec, frame)
-
-        frame += 1
-    end
-    frame
-end
-Base.done(iter::ListRecordIterator, frame_index::Int) = frame_index > nframes(iter.rec)
-function Base.next(iter::ListRecordIterator, frame_index::Int)
-    item = (frame_index, get(iter.rec, iter.id, frame_index))
-    frame_index += 1
-    while frame_index < nframes(iter.rec) &&
-          !in(iter.id, iter.rec, frame_index)
-
+Base.length(iter::ListRecordStateByIdIterator) = sum(in(iter.id, iter.rec, i) for i in 1:nframes(iter.rec))
+Base.eltype{S,D,I}(iter::ListRecordStateByIdIterator{S,D,I}) = Tuple{Int, S}
+function Base.start(iter::ListRecordStateByIdIterator)
+    frame_index = 1
+    while frame_index < nframes(iter.rec) && !in(iter.id, iter.rec, frame_index)
         frame_index += 1
     end
-    (item, frame_index)
+    return frame_index
+end
+Base.done(iter::ListRecordStateByIdIterator, frame_index::Int) = frame_index > nframes(iter.rec)
+function Base.next(iter::ListRecordStateByIdIterator, frame_index::Int)
+    item = (frame_index, get_state(iter.rec, iter.id, frame_index))
+    frame_index += 1
+    while frame_index ≤ nframes(iter.rec) && !in(iter.id, iter.rec, frame_index)
+        frame_index += 1
+    end
+    return (item, frame_index)
+end
+
+################################
+
+"""
+An iterator for looping over all scenes.
+Each element is an EntityFrame{S,D,I}.
+The same frame is continuously overwritten.
+As such, one should not call collect() on a frame iterator.
+"""
+struct ListRecordFrameIterator{S,D,I}
+    rec::ListRecord{S,D,I}
+    scene::EntityFrame{S,D,I}
+end
+ListRecordFrameIterator{S,D,I}(rec::ListRecord{S,D,I}) = ListRecordFrameIterator(rec, allocate_frame(rec))
+
+Base.length(iter::ListRecordFrameIterator) = nframes(iter.rec)
+Base.eltype{S,D,I}(iter::ListRecordFrameIterator{S,D,I}) = EntityFrame{S,D,I}
+Base.start(iter::ListRecordFrameIterator) = 1
+Base.done(iter::ListRecordFrameIterator, frame_index::Int) = frame_index > nframes(iter.rec)
+function Base.next(iter::ListRecordFrameIterator, frame_index::Int)
+    get!(iter.scene, iter.rec, frame_index)
+    return (iter.scene, frame_index+1)
 end
 
 #################################
 
-function allocate_frame{S,D,I}(rec::ListRecord{S,D,I})
-    max_n_objects = maximum(n_objects_in_frame(trajdata,i) for i in 1 : nframes(trajdata))
-    return Frame(Entity{S,D,I}, max_n_objects)
-end
