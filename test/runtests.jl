@@ -31,3 +31,26 @@ for frame in ListRecordFrameIterator(rec)
     len += 1
 end
 @test len == 2
+
+let
+    rec = ListRecord(1.0, Float64, Bool, Int)
+    @test nframes(rec) == 0
+
+    scene = EntityFrame(Float64, Bool, Int, 2)
+    push!(scene, Entity(1.0, true, 1))
+    push!(scene, Entity(2.0, true, 2))
+    push!(rec, scene)
+
+    @test nframes(rec) == 1
+
+    empty!(scene)
+    push!(scene, Entity(3.0, true, 1))
+    push!(scene, Entity(4.0, false, 3))
+    push!(rec, scene)
+    @test nframes(rec) == 2
+
+    @test get(rec, 1, 1) == Entity(1.0, true, 1)
+    @test get(rec, 1, 2) == Entity(3.0, true, 1)
+    @test get(rec, 2, 1) == Entity(2.0, true, 2)
+    @test get(rec, 3, 2) == Entity(4.0, false, 3)
+end

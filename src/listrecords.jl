@@ -19,7 +19,7 @@ end
 mutable struct ListRecord{S,D,I} # State, Definition, Identification
     timestep::Float64
     frames::Vector{RecordFrame}
-    states::Vector{RecordState{S}}
+    states::Vector{RecordState{S,I}}
     defs::Dict{I, D}
 end
 ListRecord{S,D,I}(timestep::Float64, ::Type{S}, ::Type{D}, ::Type{I}=Int) = ListRecord{S,D,I}(timestep, RecordFrame[], RecordState{S}[], Dict{I,D}())
@@ -84,6 +84,21 @@ function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,
 
     return ListRecord{S,D,I}(timestep, frames, states, defs)
 end
+
+function Base.push!{S,D,I}(rec::ListRecord{S,D,I}, frame::EntityFrame{S,D,I})
+    states = RecordState{S,I}[RecordState(e.state, e.id) for e in frame]
+    push!(rec.frames, RecordFrame(length(rec.states)+1, length(rec.states)+length(states)))
+    append!(rec.states, states)
+    for e in frame
+        if !haskey(rec.defs, e.id)
+            rec.defs[e.id] = e.def
+        else
+            @assert rec.defs[e.id] == e.def # not sure whether to keep this check
+        end
+    end
+    return rec
+end
+
 
 get_statetype{S,D,I}(rec::ListRecord{S,D,I}) = S
 get_deftype{S,D,I}(rec::ListRecord{S,D,I}) = D

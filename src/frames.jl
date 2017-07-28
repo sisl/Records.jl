@@ -60,6 +60,8 @@ end
 ####
 
 const EntityFrame{S,D,I} = Frame{Entity{S,D,I}}
+EntityFrame{S,D,I}(::Type{S},::Type{D},::Type{I}) = Frame(Entity{S,D,I})
+EntityFrame{S,D,I}(::Type{S},::Type{D},::Type{I},N::Int) = Frame(Entity{S,D,I}, N)
 
 Base.in{S,D,I}(frame::EntityFrame{S,D,I}, id::I) = findfirst(frame, id) != 0
 function Base.findfirst{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
