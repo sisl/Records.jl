@@ -73,13 +73,14 @@ function Base.findfirst{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
     end
     return 0
 end
-function get_by_id{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
+function id2index{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
     entity_index = findfirst(frame, id)
     if entity_index == 0
         throw(BoundsError(frame, id))
     end
-    return frame[entity_index]
+    return entity_index
 end
+get_by_id{S,D,I}(frame::EntityFrame{S,D,I}, id::I) = frame[id2index(frame, id)]
 function get_first_available_id{S,D,I}(frame::EntityFrame{S,D,I})
     ids = Set{I}(entity.id for entity in frame)
     id_one = one(I)

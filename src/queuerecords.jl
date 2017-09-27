@@ -32,6 +32,10 @@ function Base.deepcopy(rec::QueueRecord)
 end
 
 pastframe_inbounds(rec::QueueRecord, pastframe::Int) = 1 ≤ 1-pastframe ≤ rec.nframes
+
+"""
+Indexed by pastframe, so pastframe == 0 is the current scene, -1 is the previous frame, etc.
+"""
 Base.getindex(rec::QueueRecord, pastframe::Int) = rec.frames[1 - pastframe]
 
 get_time(rec::QueueRecord, pastframe::Int) = -get_elapsed_time(rec, pastframe)

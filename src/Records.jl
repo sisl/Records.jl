@@ -26,6 +26,7 @@ export
     frame_inbounds,
     pastframe_inbounds,
     n_objects_in_frame,
+    id2index,
     get_ids,
     nth_id,
     get_state,
