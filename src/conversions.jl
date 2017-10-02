@@ -13,15 +13,15 @@ function Base.convert{S,D,I}(::Type{ListRecord{S,D,I}}, qrec::QueueRecord{Entity
     for (i,pastframe) in enumerate(1-nframes(qrec) : 0)
         frame = qrec[pastframe]
 
-        hi = lo
+        hi = lo-1
         for entity in frame
+            hi += 1
             defs[entity.id] = entity.def
             states[hi] = RecordState{S,I}(entity.state, entity.id)
-            hi += 1
         end
 
         frames[i] = RecordFrame(lo, hi)
-        lo = hi
+        lo = hi + 1
     end
 
     return ListRecord{S,D,I}(get_timestep(qrec), frames, states, defs)
