@@ -95,5 +95,4 @@ let
 
     frame = Frame([Entity(1,1,1),Entity(2,2,2)], capacity=3)
     @test get_first_available_id(frame) == 3
-
 end
