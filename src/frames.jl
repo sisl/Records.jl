@@ -2,13 +2,14 @@ mutable struct Frame{E}
     entities::Vector{E} # NOTE: I tried StaticArrays; was not faster
     n::Int
 end
-function Frame{E}(arr::AbstractVector{E}, N::Int=length(arr))
-    N ≥ length(arr) || error("capacity cannot be less than entitiy count! (N ≥ length(arr))")
-    entities = convert(Vector{E}, arr)
-    return Frame{E}(entities, N)
+function Frame{E}(arr::AbstractVector{E}; capacity::Int=length(arr))
+    capacity ≥ length(arr) || error("capacity cannot be less than entitiy count! (N ≥ length(arr))")
+    entities = Array{E}(capacity)
+    copy!(entities, arr)
+    return Frame{E}(entities, length(arr))
 end
-function Frame{E}(::Type{E}, N::Int=100)
-    entities = Array{E}(N)
+function Frame{E}(::Type{E}, capacity::Int=100)
+    entities = Array{E}(capacity)
     return Frame{E}(entities, 0)
 end
 
@@ -17,6 +18,7 @@ Base.show{E}(io::IO, frame::Frame{E}) = @printf(io, "Frame{%s}(%d entities)", st
 capacity(frame::Frame) = length(frame.entities)
 Base.length(frame::Frame) = frame.n
 Base.getindex(frame::Frame, i::Int) = frame.entities[i]
+Base.eltype{E}(frame::Frame{E}) = E
 
 Base.endof(frame::Frame) = frame.n
 function Base.setindex!{E}(frame::Frame{E}, entity::E, i::Int)
@@ -28,8 +30,6 @@ function Base.empty!(frame::Frame)
     return frame
 end
 function Base.deleteat!(frame::Frame, entity_index::Int)
-    entity_index > 0 || throw(DomainError())
-
     for i in entity_index : frame.n - 1
         frame.entities[i] = frame.entities[i+1]
     end
