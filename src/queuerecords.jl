@@ -17,8 +17,8 @@ capacity(rec::QueueRecord) = length(rec.frames)
 nframes(rec::QueueRecord) = rec.nframes
 function nstates(rec::QueueRecord)
     retval = 0
-    for frame in rec.frames
-        retval += length(frame)
+    for frame_index in 1 : nframes(rec)
+        retval += length(rec.frames[frame_index])
     end
     return retval
 end

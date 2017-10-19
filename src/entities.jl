@@ -1,4 +1,4 @@
-immutable Entity{S,D,I} # state, definition, identification
+struct Entity{S,D,I} # state, definition, identification
     state::S
     def::D
     id::I
