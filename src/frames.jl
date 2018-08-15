@@ -20,7 +20,7 @@ Base.length(frame::Frame) = frame.n
 Base.getindex(frame::Frame, i::Int) = frame.entities[i]
 Base.eltype(frame::Frame{E}) where {E} = E
 
-Base.endof(frame::Frame) = frame.n
+Base.lastindex(frame::Frame) = frame.n
 function Base.setindex!(frame::Frame{E}, entity::E, i::Int) where {E}
     frame.entities[i] = entity
     return frame
