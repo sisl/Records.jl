@@ -3,10 +3,10 @@
 
 Converts a QueueRecord into the corresponding ListRecord.
 """
-function Base.convert{S,D,I}(::Type{ListRecord{S,D,I}}, qrec::QueueRecord{Entity{S,D,I}})
+function Base.convert(::Type{ListRecord{S,D,I}}, qrec::QueueRecord{Entity{S,D,I}}) where {S,D,I}
 
-    frames = Array{RecordFrame}(nframes(qrec))
-    states = Array{RecordState{S,I}}(nstates(qrec))
+    frames = Array{RecordFrame}(undef, nframes(qrec))
+    states = Array{RecordState{S,I}}(undef, nstates(qrec))
     defs = Dict{I, D}()
 
     lo = 1
@@ -26,7 +26,7 @@ function Base.convert{S,D,I}(::Type{ListRecord{S,D,I}}, qrec::QueueRecord{Entity
 
     return ListRecord{S,D,I}(get_timestep(qrec), frames, states, defs)
 end
-Base.convert{S,D,I}(::Type{ListRecord}, qrec::QueueRecord{Entity{S,D,I}}) = convert(ListRecord{S,D,I}, qrec)
+Base.convert(::Type{ListRecord}, qrec::QueueRecord{Entity{S,D,I}}) where {S,D,I} = convert(ListRecord{S,D,I}, qrec)
 
 """
     convert(QueueRecord, lrec::ListRecord)
@@ -34,7 +34,7 @@ Base.convert{S,D,I}(::Type{ListRecord}, qrec::QueueRecord{Entity{S,D,I}}) = conv
 Converts a ListRecord into the corresponding QueueRecord{Entity{S,D,I}}.
 Note that the timesteps for a ListRecord are not necessarily constant timesteps.
 """
-function Base.convert{S,D,I}(::Type{QueueRecord{Entity{S,D,I}}}, lrec::ListRecord{S,D,I})
+function Base.convert(::Type{QueueRecord{Entity{S,D,I}}}, lrec::ListRecord{S,D,I}) where {S,D,I}
 
     N = nframes(lrec)
     M = maximum(n_objects_in_frame(lrec, i) for i in 1 : N)
@@ -60,7 +60,7 @@ In the sparse array, each column is the state of an entity, and reach row is a f
 
 A tuple containing the sparse matrix and a dictionary mapping from ids to the column number are returned.
 """
-function get_sparse_lookup{S,D,I<:Integer}(rec::ListRecord{S,D,I})
+function get_sparse_lookup(rec::ListRecord{S,D,I}) where {S,D,I<:Integer}
 
     # ids are by time of entry
     # translate id to index on range of 1:n
@@ -72,7 +72,7 @@ function get_sparse_lookup{S,D,I<:Integer}(rec::ListRecord{S,D,I})
     n_states = length(rec.states)
 
     # the row/frame of each state
-    Is = Vector{Int}(n_states)
+    Is = Vector{Int}(undef, n_states)
     # the column/car index (not the id, see id_lookup)
     Js = similar(Is)
     # the states themselves
@@ -91,6 +91,6 @@ function get_sparse_lookup{S,D,I<:Integer}(rec::ListRecord{S,D,I})
         end
     end
 
-    sparsemat = Base.sparse(Is, Js, Vs, m, n)
+    sparsemat = sparse(Is, Js, Vs, m, n)
     return (sparsemat, id_lookup)
 end

@@ -22,9 +22,9 @@ mutable struct ListRecord{S,D,I} # State, Definition, Identification
     states::Vector{RecordState{S,I}}
     defs::Dict{I, D}
 end
-ListRecord{S,D,I}(timestep::Float64, ::Type{S}, ::Type{D}, ::Type{I}=Int) = ListRecord{S,D,I}(timestep, RecordFrame[], RecordState{S}[], Dict{I,D}())
+ListRecord(timestep::Float64, ::Type{S}, ::Type{D}, ::Type{I}=Int) where {S,D,I} = ListRecord{S,D,I}(timestep, RecordFrame[], RecordState{S}[], Dict{I,D}())
 
-Base.show{S,D,I}(io::IO, rec::ListRecord{S,D,I}) = @printf(io, "ListRecord{%s, %s, %s}(%d frames)", string(S), string(D), string(I), nframes(rec))
+Base.show(io::IO, rec::ListRecord{S,D,I}) where {S,D,I} = @printf(io, "ListRecord{%s, %s, %s}(%d frames)", string(S), string(D), string(I), nframes(rec))
 function Base.write(io::IO, mime::MIME"text/plain", rec::ListRecord)
 
     show(io, rec)
@@ -56,7 +56,7 @@ function Base.write(io::IO, mime::MIME"text/plain", rec::ListRecord)
         print(io, "\n")
     end
 end
-function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,I}})
+function Base.read(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,I}}) where {S,D,I}
     readline(io) # skip first line
 
     timestep = parse(Float64, readline(io))
@@ -69,7 +69,7 @@ function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,
     end
 
     n = parse(Int, readline(io))
-    states = Array{RecordState{S,I}}(n)
+    states = Array{RecordState{S,I}}(undef, n)
     for i in 1 : n
         id = read(io, mime, I)
         state = read(io, mime, S)
@@ -77,7 +77,7 @@ function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,
     end
 
     n = parse(Int, readline(io))
-    frames = Array{RecordFrame}(n)
+    frames = Array{RecordFrame}(undef, n)
     for i in 1 : n
         frames[i] = read(io, mime, RecordFrame)
     end
@@ -85,7 +85,7 @@ function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{ListRecord{S,D,
     return ListRecord{S,D,I}(timestep, frames, states, defs)
 end
 
-function Base.push!{S,D,I}(rec::ListRecord{S,D,I}, frame::EntityFrame{S,D,I})
+function Base.push!(rec::ListRecord{S,D,I}, frame::EntityFrame{S,D,I}) where {S,D,I}
     states = RecordState{S,I}[RecordState(e.state, e.id) for e in frame]
     push!(rec.frames, RecordFrame(length(rec.states)+1, length(rec.states)+length(states)))
     append!(rec.states, states)
@@ -99,10 +99,9 @@ function Base.push!{S,D,I}(rec::ListRecord{S,D,I}, frame::EntityFrame{S,D,I})
     return rec
 end
 
-
-get_statetype{S,D,I}(rec::ListRecord{S,D,I}) = S
-get_deftype{S,D,I}(rec::ListRecord{S,D,I}) = D
-get_idtype{S,D,I}(rec::ListRecord{S,D,I}) = I
+get_statetype(rec::ListRecord{S,D,I}) where {S,D,I} = S 
+get_deftype(rec::ListRecord{S,D,I}) where {S,D,I} = D
+get_idtype(rec::ListRecord{S,D,I}) where {S,D,I} = I
 
 nframes(rec::ListRecord) = length(rec.frames)
 nstates(rec::ListRecord) = length(rec.states)
@@ -118,7 +117,7 @@ get_time(rec::ListRecord, frame_index::Int) = rec.timestep * (frame_index-1)
 get_timestep(rec::ListRecord) = rec.timestep
 get_elapsed_time(rec::ListRecord, frame_lo::Int, frame_hi::Int) = rec.timestep * (frame_hi - frame_lo)
 
-function findfirst_stateindex_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::I, frame_index::Int)
+function findfirst_stateindex_with_id(rec::ListRecord{S,D,I}, id::I, frame_index::Int) where {S,D,I}
     recframe = rec.frames[frame_index]
     for i in recframe.lo : recframe.hi
         if rec.states[i].id == id
@@ -127,7 +126,7 @@ function findfirst_stateindex_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::I, fram
     end
     return 0
 end
-function findfirst_frame_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::I)
+function findfirst_frame_with_id(rec::ListRecord{S,D,I}, id::I) where {S,D,I}
     for frame in 1:length(rec.frames)
         if findfirst_stateindex_with_id(rec, id, frame) != 0
             return frame
@@ -135,7 +134,7 @@ function findfirst_frame_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::I)
     end
     return 0
 end
-function findlast_frame_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::Int)
+function findlast_frame_with_id(rec::ListRecord{S,D,I}, id::Int) where {S,D,I}
     for frame in reverse(1:length(rec.frames))
         if findfirst_stateindex_with_id(rec, id, frame) != 0
             return frame
@@ -144,21 +143,21 @@ function findlast_frame_with_id{S,D,I}(rec::ListRecord{S,D,I}, id::Int)
     return 0
 end
 
-Base.in{S,D,I}(id::I, rec::ListRecord{S,D,I}, frame_index::Int) = findfirst_stateindex_with_id(rec, id, frame_index) != 0
-get_state{S,D,I}(rec::ListRecord{S,D,I}, id::I, frame_index::Int) = rec.states[findfirst_stateindex_with_id(rec, id, frame_index)].state
-get_def{S,D,I}(rec::ListRecord{S,D,I}, id::I) = rec.defs[id]
-Base.get{S,D,I}(rec::ListRecord{S,D,I}, id::I, frame_index::Int) = Entity(get_state(rec, id, frame_index), get_def(rec,id), id)
+Base.in(id::I, rec::ListRecord{S,D,I}, frame_index::Int) where {S,D,I} = findfirst_stateindex_with_id(rec, id, frame_index) != 0
+get_state(rec::ListRecord{S,D,I}, id::I, frame_index::Int) where {S,D,I} = rec.states[findfirst_stateindex_with_id(rec, id, frame_index)].state
+get_def(rec::ListRecord{S,D,I}, id::I) where {S,D,I} = rec.defs[id]
+Base.get(rec::ListRecord{S,D,I}, id::I, frame_index::Int) where {S,D,I} = Entity(get_state(rec, id, frame_index), get_def(rec,id), id)
 function Base.get(rec::ListRecord, stateindex::Int)
     recstate = rec.states[stateindex]
     return Entity(recstate.state, get_def(rec, recstate.id), recstate.id)
 end
 
-function get_subinterval{S,D,I}(rec::ListRecord{S,D,I}, frame_index_lo::Int, frame_index_hi::Int)
+function get_subinterval(rec::ListRecord{S,D,I}, frame_index_lo::Int, frame_index_hi::Int) where {S,D,I}
     frame_index_hi ≥ frame_index_lo || throw(DomainError())
 
     frame_indexes = frame_index_lo : frame_index_hi
-    frames = Array{RecordFrame}(length(frame_indexes))
-    states = Array{RecordState{S,I}}(rec.frames[frame_index_hi].hi - rec.frames[frame_index_lo].lo + 1)
+    frames = Array{RecordFrame}(undef, length(frame_indexes))
+    states = Array{RecordState{S,I}}(undef, rec.frames[frame_index_hi].hi - rec.frames[frame_index_lo].lo + 1)
     defs = Dict{I, D}()
 
     hi = 1
@@ -167,7 +166,7 @@ function get_subinterval{S,D,I}(rec::ListRecord{S,D,I}, frame_index_lo::Int, fra
         n = length(frame)
         lo = hi
         hi += n-1
-        copy!(states, lo, rec.states, frame.lo, n)
+        copyto!(states, lo, rec.states, frame.lo, n)
         frames[i] = RecordFrame(lo, hi)
         hi += 1
     end
@@ -182,12 +181,12 @@ get_subinterval(rec::ListRecord, range::UnitRange{Int64}) = get_subinterval(rec,
 
 #################################
 
-EntityFrame{S,D,I}(rec::ListRecord{S,D,I}, N::Int=100) = Frame(Entity{S,D,I}, N)
-function allocate_frame{S,D,I}(rec::ListRecord{S,D,I})
+EntityFrame(rec::ListRecord{S,D,I}, N::Int=100) where {S,D,I} = Frame(Entity{S,D,I}, N)
+function allocate_frame(rec::ListRecord{S,D,I}) where {S,D,I}
     max_n_objects = maximum(n_objects_in_frame(rec,i) for i in 1 : nframes(rec))
     return Frame(Entity{S,D,I}, max_n_objects)
 end
-function Base.get!{S,D,I}(frame::EntityFrame{S,D,I}, rec::ListRecord{S,D,I}, frame_index::Int)
+function Base.get!(frame::EntityFrame{S,D,I}, rec::ListRecord{S,D,I}, frame_index::Int) where {S,D,I}
 
     empty!(frame)
 
@@ -212,24 +211,20 @@ struct ListRecordStateByIdIterator{S,D,I}
     rec::ListRecord{S,D,I}
     id::I
 end
-Base.length(iter::ListRecordStateByIdIterator) = sum(in(iter.id, iter.rec, i) for i in 1:nframes(iter.rec))
-Base.eltype{S,D,I}(iter::ListRecordStateByIdIterator{S,D,I}) = Tuple{Int, S}
-function Base.start(iter::ListRecordStateByIdIterator)
-    frame_index = 1
-    while frame_index < nframes(iter.rec) && !in(iter.id, iter.rec, frame_index)
-        frame_index += 1
-    end
-    return frame_index
-end
-Base.done(iter::ListRecordStateByIdIterator, frame_index::Int) = frame_index > nframes(iter.rec)
-function Base.next(iter::ListRecordStateByIdIterator, frame_index::Int)
-    item = (frame_index, get_state(iter.rec, iter.id, frame_index))
-    frame_index += 1
+
+function Base.iterate(iter::ListRecordStateByIdIterator, frame_index::Int=1)
     while frame_index ≤ nframes(iter.rec) && !in(iter.id, iter.rec, frame_index)
         frame_index += 1
     end
-    return (item, frame_index)
+    if frame_index > nframes(iter.rec)
+        return nothing 
+    end
+    item = (frame_index, get_state(iter.rec, iter.id, frame_index))
+    return (item, frame_index+1)
 end
+
+Base.length(iter::ListRecordStateByIdIterator) = sum(in(iter.id, iter.rec, i) for i in 1:nframes(iter.rec))
+Base.eltype(iter::ListRecordStateByIdIterator{S,D,I}) where {S,D,I} = Tuple{Int, S}
 
 ################################
 
@@ -243,16 +238,15 @@ struct ListRecordFrameIterator{S,D,I}
     rec::ListRecord{S,D,I}
     scene::EntityFrame{S,D,I}
 end
-ListRecordFrameIterator{S,D,I}(rec::ListRecord{S,D,I}) = ListRecordFrameIterator(rec, allocate_frame(rec))
+ListRecordFrameIterator(rec::ListRecord{S,D,I}) where {S,D,I} = ListRecordFrameIterator(rec, allocate_frame(rec))
 
-Base.length(iter::ListRecordFrameIterator) = nframes(iter.rec)
-Base.eltype{S,D,I}(iter::ListRecordFrameIterator{S,D,I}) = EntityFrame{S,D,I}
-Base.start(iter::ListRecordFrameIterator) = 1
-Base.done(iter::ListRecordFrameIterator, frame_index::Int) = frame_index > nframes(iter.rec)
-function Base.next(iter::ListRecordFrameIterator, frame_index::Int)
+function Base.iterate(iter::ListRecordFrameIterator, frame_index::Int=1)
+    if frame_index > nframes(iter.rec)
+        return nothing
+    end
     get!(iter.scene, iter.rec, frame_index)
     return (iter.scene, frame_index+1)
 end
 
-#################################
-
+Base.length(iter::ListRecordFrameIterator) = nframes(iter.rec)
+Base.eltype(iter::ListRecordFrameIterator{S,D,I}) where {S,D,I} = EntityFrame{S,D,I}
