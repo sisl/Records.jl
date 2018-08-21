@@ -2,26 +2,26 @@ mutable struct Frame{E}
     entities::Vector{E} # NOTE: I tried StaticArrays; was not faster
     n::Int
 end
-function Frame{E}(arr::AbstractVector{E}; capacity::Int=length(arr))
+function Frame(arr::AbstractVector{E}; capacity::Int=length(arr)) where {E}
     capacity ≥ length(arr) || error("capacity cannot be less than entitiy count! (N ≥ length(arr))")
-    entities = Array{E}(capacity)
-    copy!(entities, arr)
+    entities = Array{E}(undef, capacity)
+    copyto!(entities, arr)
     return Frame{E}(entities, length(arr))
 end
-function Frame{E}(::Type{E}, capacity::Int=100)
-    entities = Array{E}(capacity)
+function Frame(::Type{E}, capacity::Int=100) where {E}
+    entities = Array{E}(undef, capacity)
     return Frame{E}(entities, 0)
 end
 
-Base.show{E}(io::IO, frame::Frame{E}) = @printf(io, "Frame{%s}(%d entities)", string(E), length(frame))
+Base.show(io::IO, frame::Frame{E}) where {E}= @printf(io, "Frame{%s}(%d entities)", string(E), length(frame))
 
 capacity(frame::Frame) = length(frame.entities)
 Base.length(frame::Frame) = frame.n
 Base.getindex(frame::Frame, i::Int) = frame.entities[i]
-Base.eltype{E}(frame::Frame{E}) = E
+Base.eltype(frame::Frame{E}) where {E} = E
 
-Base.endof(frame::Frame) = frame.n
-function Base.setindex!{E}(frame::Frame{E}, entity::E, i::Int)
+Base.lastindex(frame::Frame) = frame.n
+function Base.setindex!(frame::Frame{E}, entity::E, i::Int) where {E}
     frame.entities[i] = entity
     return frame
 end
@@ -37,20 +37,23 @@ function Base.deleteat!(frame::Frame, entity_index::Int)
     frame
 end
 
-Base.start(frame::Frame) = 1
-Base.done(frame::Frame, i::Int) = i > length(frame)
-Base.next(frame::Frame, i::Int) = (frame.entities[i], i+1)
+function Base.iterate(frame::Frame{E}, i::Int=1) where {E}
+    if i > length(frame)
+        return nothing
+    end
+    return (frame.entities[i], i+1)
+end
 
-function Base.copy!{E}(dest::Frame{E}, src::Frame{E})
+function Base.copyto!(dest::Frame{E}, src::Frame{E}) where {E}
     for i in 1 : src.n
         dest.entities[i] = src.entities[i]
     end
     dest.n = src.n
     return dest
 end
-Base.copy{E}(frame::Frame{E}) = copy!(Frame(E, capacity(frame)), frame)
+Base.copy(frame::Frame{E}) where {E} = copyto!(Frame(E, capacity(frame)), frame)
 
-function Base.push!{E}(frame::Frame{E}, entity::E)
+function Base.push!(frame::Frame{E}, entity::E) where {E}
     frame.n += 1
     frame.entities[frame.n] = entity
     return frame
@@ -60,11 +63,11 @@ end
 ####
 
 const EntityFrame{S,D,I} = Frame{Entity{S,D,I}}
-EntityFrame{S,D,I}(::Type{S},::Type{D},::Type{I}) = Frame(Entity{S,D,I})
-EntityFrame{S,D,I}(::Type{S},::Type{D},::Type{I},N::Int) = Frame(Entity{S,D,I}, N)
+EntityFrame(::Type{S},::Type{D},::Type{I}) where {S,D,I} = Frame(Entity{S,D,I})
+EntityFrame(::Type{S},::Type{D},::Type{I},N::Int) where {S,D,I} = Frame(Entity{S,D,I}, N)
 
-Base.in{S,D,I}(frame::EntityFrame{S,D,I}, id::I) = findfirst(frame, id) != 0
-function Base.findfirst{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
+Base.in(frame::EntityFrame{S,D,I}, id::I) where {S,D,I} = findfirst(frame, id) != 0
+function Base.findfirst(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
     for entity_index in 1 : frame.n
         entity = frame.entities[entity_index]
         if entity.id == id
@@ -73,15 +76,15 @@ function Base.findfirst{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
     end
     return 0
 end
-function id2index{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
+function id2index(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
     entity_index = findfirst(frame, id)
     if entity_index == 0
         throw(BoundsError(frame, id))
     end
     return entity_index
 end
-get_by_id{S,D,I}(frame::EntityFrame{S,D,I}, id::I) = frame[id2index(frame, id)]
-function get_first_available_id{S,D,I}(frame::EntityFrame{S,D,I})
+get_by_id(frame::EntityFrame{S,D,I}, id::I) where {S,D,I} = frame[id2index(frame, id)] 
+function get_first_available_id(frame::EntityFrame{S,D,I}) where {S,D,I}
     ids = Set{I}(entity.id for entity in frame)
     id_one = one(I)
     id = id_one
@@ -90,14 +93,14 @@ function get_first_available_id{S,D,I}(frame::EntityFrame{S,D,I})
     end
     return id
 end
-function Base.push!{S,D,I}(frame::EntityFrame{S,D,I}, s::S)
+function Base.push!(frame::EntityFrame{S,D,I}, s::S) where {S,D,I}
     id = get_first_available_id(frame)
     entity = Entity{S,D,I}(s, D(), id)
     push!(frame, entity)
 end
 
-Base.delete!{S,D,I}(frame::EntityFrame{S,D,I}, entity::Entity{S,D,I}) = deleteat!(frame, findfirst(frame, entity.id))
-function Base.delete!{S,D,I}(frame::EntityFrame{S,D,I}, id::I)
+Base.delete!(frame::EntityFrame{S,D,I}, entity::Entity{S,D,I}) where {S,D,I} = deleteat!(frame, findfirst(frame, entity.id))
+function Base.delete!(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
     entity_index = findfirst(frame, id)
     if entity_index != 0
         deleteat!(frame, entity_index)
@@ -107,7 +110,7 @@ end
 
 ###
 
-function Base.write{S,D,I}(io::IO, mime::MIME"text/plain", frames::Vector{EntityFrame{S,D,I}})
+function Base.write(io::IO, mime::MIME"text/plain", frames::Vector{EntityFrame{S,D,I}}) where {S,D,I}
     println(io, length(frames))
     for frame in frames
         println(io, length(frame))
@@ -121,10 +124,10 @@ function Base.write{S,D,I}(io::IO, mime::MIME"text/plain", frames::Vector{Entity
         end
     end
 end
-function Base.read{S,D,I}(io::IO, mime::MIME"text/plain", ::Type{Vector{EntityFrame{S,D,I}}})
+function Base.read(io::IO, mime::MIME"text/plain", ::Type{Vector{EntityFrame{S,D,I}}}) where {S,D,I}
 
     n = parse(Int, readline(io))
-    frames = Array{EntityFrame{S,D,I}}(n)
+    frames = Array{EntityFrame{S,D,I}}(undef, n)
 
     for i in 1 : n
         m = parse(Int, readline(io))

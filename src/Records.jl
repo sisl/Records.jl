@@ -2,6 +2,9 @@ __precompile__()
 
 module Records
 
+using Printf
+using SparseArrays
+
 export
     Entity,
     Frame,

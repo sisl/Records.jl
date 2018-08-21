@@ -3,8 +3,8 @@ mutable struct QueueRecord{E}
     timestep::Float64
     nframes::Int # number of active Frames
 end
-function QueueRecord{E}(::Type{E}, capacity::Int, timestep::Float64, frame_capacity::Int=100)
-    frames = Array{Frame{E}}(capacity)
+function QueueRecord(::Type{E}, capacity::Int, timestep::Float64, frame_capacity::Int=100) where {E}
+    frames = Array{Frame{E}}(undef, capacity)
     for i in 1 : length(frames)
         frames[i] = Frame(E, frame_capacity)
     end
@@ -26,7 +26,7 @@ end
 function Base.deepcopy(rec::QueueRecord)
     retval = QueueRecord(capacity(rec), rec.timestep, capacity(rec.frames[1]))
     for i in 1 : rec.nframes
-        copy!(retval.frames[i], rec.frames[i])
+        copyto!(retval.frames[i], rec.frames[i])
     end
     retval
 end
@@ -57,26 +57,26 @@ end
 
 function push_back_records!(rec::QueueRecord)
     for i in min(rec.nframes+1, capacity(rec)) : -1 : 2
-        copy!(rec.frames[i], rec.frames[i-1])
+        copyto!(rec.frames[i], rec.frames[i-1])
     end
     return rec
 end
-function Base.insert!{E}(rec::QueueRecord{E}, frame::Frame{E}, pastframe::Int=0)
-    copy!(rec[pastframe], frame)
+function Base.insert!(rec::QueueRecord{E}, frame::Frame{E}, pastframe::Int=0) where {E}
+    copyto!(rec[pastframe], frame)
     return rec
 end
-function Base.get!{E}(frame::Frame{E}, rec::QueueRecord{E}, pastframe::Int=0)
-    copy!(frame, rec[pastframe])
+function Base.get!(frame::Frame{E}, rec::QueueRecord{E}, pastframe::Int=0) where {E}
+    copyto!(frame, rec[pastframe])
     frame
 end
-function update!{E}(rec::QueueRecord{E}, frame::Frame{E})
+function update!(rec::QueueRecord{E}, frame::Frame{E}) where {E}
     push_back_records!(rec)
     insert!(rec, frame, 0)
     rec.nframes = min(rec.nframes+1, capacity(rec))
     return rec
 end
 
-function allocate_frame{E}(rec::QueueRecord{E})
+function allocate_frame(rec::QueueRecord{E}) where {E}
     max_n_objects = maximum(length(rec[j]) for j in 0 : 1-length(rec))
     return Frame(E, max_n_objects)
 end
