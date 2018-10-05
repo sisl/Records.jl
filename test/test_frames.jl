@@ -66,14 +66,14 @@ let
     @test eltype(frame) == Entity{Int,Float64,String}
 
     frame = Frame([Entity(1,1,"A"),Entity(2,2,"B"),Entity(3,3,"C")])
-    @test  in(frame, "A")
-    @test  in(frame, "B")
-    @test  in(frame, "C")
-    @test !in(frame, "D")
-    @test findfirst(frame, "A") == 1
-    @test findfirst(frame, "B") == 2
-    @test findfirst(frame, "C") == 3
-    @test findfirst(frame, "D") == 0
+    @test  in("A", frame)
+    @test  in("B", frame)
+    @test  in("C", frame)
+    @test !in("D", frame)
+    @test findfirst("A", frame) == 1
+    @test findfirst("B", frame) == 2
+    @test findfirst("C", frame) == 3
+    @test findfirst("D", frame) == 0
     @test id2index(frame, "A") == 1
     @test id2index(frame, "B") == 2
     @test id2index(frame, "C") == 3

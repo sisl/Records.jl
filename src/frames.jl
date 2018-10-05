@@ -66,8 +66,8 @@ const EntityFrame{S,D,I} = Frame{Entity{S,D,I}}
 EntityFrame(::Type{S},::Type{D},::Type{I}) where {S,D,I} = Frame(Entity{S,D,I})
 EntityFrame(::Type{S},::Type{D},::Type{I},N::Int) where {S,D,I} = Frame(Entity{S,D,I}, N)
 
-Base.in(frame::EntityFrame{S,D,I}, id::I) where {S,D,I} = findfirst(frame, id) != 0
-function Base.findfirst(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
+Base.in(id::I, frame::EntityFrame{S,D,I}) where {S,D,I} = findfirst(id, frame) != 0
+function Base.findfirst(id::I, frame::EntityFrame{S,D,I}) where {S,D,I}
     for entity_index in 1 : frame.n
         entity = frame.entities[entity_index]
         if entity.id == id
@@ -77,7 +77,7 @@ function Base.findfirst(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
     return 0
 end
 function id2index(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
-    entity_index = findfirst(frame, id)
+    entity_index = findfirst(id, frame)
     if entity_index == 0
         throw(BoundsError(frame, id))
     end
@@ -99,9 +99,9 @@ function Base.push!(frame::EntityFrame{S,D,I}, s::S) where {S,D,I}
     push!(frame, entity)
 end
 
-Base.delete!(frame::EntityFrame{S,D,I}, entity::Entity{S,D,I}) where {S,D,I} = deleteat!(frame, findfirst(frame, entity.id))
+Base.delete!(frame::EntityFrame{S,D,I}, entity::Entity{S,D,I}) where {S,D,I} = deleteat!(frame, findfirst(entity.id, frame))
 function Base.delete!(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
-    entity_index = findfirst(frame, id)
+    entity_index = findfirst(id, frame)
     if entity_index != 0
         deleteat!(frame, entity_index)
     end
