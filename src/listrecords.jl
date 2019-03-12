@@ -143,7 +143,7 @@ function findlast_frame_with_id(rec::ListRecord{S,D,I}, id::Int) where {S,D,I}
     return nothing
 end
 
-Base.in(id::I, rec::ListRecord{S,D,I}, frame_index::Int) where {S,D,I} = findfirst_stateindex_with_id(rec, id, frame_index) != 0
+Base.in(id::I, rec::ListRecord{S,D,I}, frame_index::Int) where {S,D,I} = findfirst_stateindex_with_id(rec, id, frame_index) != nothing
 get_state(rec::ListRecord{S,D,I}, id::I, frame_index::Int) where {S,D,I} = rec.states[findfirst_stateindex_with_id(rec, id, frame_index)].state
 get_def(rec::ListRecord{S,D,I}, id::I) where {S,D,I} = rec.defs[id]
 Base.get(rec::ListRecord{S,D,I}, id::I, frame_index::Int) where {S,D,I} = Entity(get_state(rec, id, frame_index), get_def(rec,id), id)

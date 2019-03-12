@@ -49,7 +49,7 @@ let
     @test frame[1] == 888
 
     deleteat!(frame, 1)
-    @test length(frame) == nothing
+    @test length(frame) == 0
     @test capacity(frame) == 2
 
     frame = Frame([1,2,3])

@@ -66,7 +66,7 @@ const EntityFrame{S,D,I} = Frame{Entity{S,D,I}}
 EntityFrame(::Type{S},::Type{D},::Type{I}) where {S,D,I} = Frame(Entity{S,D,I})
 EntityFrame(::Type{S},::Type{D},::Type{I},N::Int) where {S,D,I} = Frame(Entity{S,D,I}, N)
 
-Base.in(id::I, frame::EntityFrame{S,D,I}) where {S,D,I} = findfirst(id, frame) != 0
+Base.in(id::I, frame::EntityFrame{S,D,I}) where {S,D,I} = findfirst(id, frame) != nothing
 function Base.findfirst(id::I, frame::EntityFrame{S,D,I}) where {S,D,I}
     for entity_index in 1 : frame.n
         entity = frame.entities[entity_index]
