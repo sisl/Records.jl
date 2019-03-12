@@ -37,11 +37,11 @@ let
 
     @test findfirst_frame_with_id(rec, 1) == 1
     @test findfirst_frame_with_id(rec, 3) == 2
-    @test findfirst_frame_with_id(rec, 4) == 0
+    @test findfirst_frame_with_id(rec, 4) == nothing
 
     @test findlast_frame_with_id(rec, 2) == 1
     @test findlast_frame_with_id(rec, 3) == 2
-    @test findlast_frame_with_id(rec, 4) == 0
+    @test findlast_frame_with_id(rec, 4) == nothing
 
     @test length(ListRecordFrameIterator(rec)) == 2
     len = 0
