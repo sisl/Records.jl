@@ -124,26 +124,26 @@ function findfirst_stateindex_with_id(rec::ListRecord{S,D,I}, id::I, frame_index
             return i
         end
     end
-    return 0
+    return nothing
 end
 function findfirst_frame_with_id(rec::ListRecord{S,D,I}, id::I) where {S,D,I}
     for frame in 1:length(rec.frames)
-        if findfirst_stateindex_with_id(rec, id, frame) != 0
+        if findfirst_stateindex_with_id(rec, id, frame) != nothing
             return frame
         end
     end
-    return 0
+    return nothing
 end
 function findlast_frame_with_id(rec::ListRecord{S,D,I}, id::Int) where {S,D,I}
     for frame in reverse(1:length(rec.frames))
-        if findfirst_stateindex_with_id(rec, id, frame) != 0
+        if findfirst_stateindex_with_id(rec, id, frame) != nothing
             return frame
         end
     end
-    return 0
+    return nothing
 end
 
-Base.in(id::I, rec::ListRecord{S,D,I}, frame_index::Int) where {S,D,I} = findfirst_stateindex_with_id(rec, id, frame_index) != 0
+Base.in(id::I, rec::ListRecord{S,D,I}, frame_index::Int) where {S,D,I} = findfirst_stateindex_with_id(rec, id, frame_index) != nothing
 get_state(rec::ListRecord{S,D,I}, id::I, frame_index::Int) where {S,D,I} = rec.states[findfirst_stateindex_with_id(rec, id, frame_index)].state
 get_def(rec::ListRecord{S,D,I}, id::I) where {S,D,I} = rec.defs[id]
 Base.get(rec::ListRecord{S,D,I}, id::I, frame_index::Int) where {S,D,I} = Entity(get_state(rec, id, frame_index), get_def(rec,id), id)

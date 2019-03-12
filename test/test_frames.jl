@@ -73,7 +73,7 @@ let
     @test findfirst("A", frame) == 1
     @test findfirst("B", frame) == 2
     @test findfirst("C", frame) == 3
-    @test findfirst("D", frame) == 0
+    @test findfirst("D", frame) == nothing
     @test id2index(frame, "A") == 1
     @test id2index(frame, "B") == 2
     @test id2index(frame, "C") == 3
