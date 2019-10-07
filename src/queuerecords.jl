@@ -82,3 +82,8 @@ function allocate_frame(rec::QueueRecord{E}) where {E}
 end
 
 const EntityQueueRecord{S,D,I} = QueueRecord{Entity{S,D,I}}
+
+Base.length(record::QueueRecord) = nframes(record)
+function Base.iterate(record::QueueRecord, state::Int64=(-nframes(record)+1))
+    return state<=0 ? (record[state], state+1) : nothing
+end
