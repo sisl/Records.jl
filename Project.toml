@@ -1,7 +1,7 @@
 name = "Records"
 uuid = "5984c134-fa48-5ed5-a57f-fc2f6936871f"
 repo = "https://github.com/sisl/Records.jl"
-version = "0.7.0"
+version = "0.7.1"
 
 [deps]
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
