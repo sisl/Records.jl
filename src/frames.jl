@@ -78,8 +78,8 @@ function Base.findfirst(id::I, frame::EntityFrame{S,D,I}) where {S,D,I}
 end
 function id2index(frame::EntityFrame{S,D,I}, id::I) where {S,D,I}
     entity_index = findfirst(id, frame)
-    if entity_index == nothing
-        throw(BoundsError(frame, id))
+    if entity_index === nothing
+        throw(BoundsError(frame, [id]))
     end
     return entity_index
 end
